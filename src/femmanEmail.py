@@ -172,7 +172,8 @@ def readEmailFromGmail():
 
         for i in range(latest_email_id,first_email_id, -1):
             type, data = mail.fetch(str(i), '(RFC822)' )
-#            result, data = mail.fetch(str(message_id), "(RFC822)") #py3 https://stackoverflow.com/questions/14080629/python-3-imaplib-fetch-typeerror-cant-concat-bytes-to-int
+#            result, data = mail.fetch(str(message_id), "(RFC822)")
+#py3 https://stackoverflow.com/questions/14080629/python-3-imaplib-fetch-typeerror-cant-concat-bytes-to-int
             for response_part in data:
                 if isinstance(response_part, tuple):
                     msg = email.message_from_bytes(response_part[1])
@@ -240,8 +241,6 @@ def sendEmail(member):
     logging.debug(str(member))
     sentFrom = FROM_EMAIL
 
-    to = ['jonas.hedman@fripost.org']
-    logging.debug("to: "+str(to))
     subject = 'Welcome to Femman!'
 
     applicationDate = member[4]
@@ -256,8 +255,6 @@ def sendEmail(member):
     # this calcs how long membership is. if payed before or including
     # oct 1 then member ship is applicationYear + nextyear.
     applicationYear = applicationDate.year
-#    tmpStr = str(applicationYear)+"/10/1"
-#    firstOct = datetime.strptime(tmpStr, '%Y/%m/%d')
 
     tmpStr = str(applicationYear)+"/12/1"
     firstDec = datetime.strptime(tmpStr, '%Y/%m/%d')
@@ -283,7 +280,6 @@ def sendEmail(member):
     msg['FROM'] = sentFrom
 
     to = member[3]
-#    to = 'jonas.hedman@fripost.org'
 
     bodyStr = body
     msg['Subject'] = subject
@@ -305,85 +301,6 @@ def sendEmail(member):
     except Exception as e:
         print(e)
         logging.debug(e)
-
-
-
-def sendEmailNextYar(member):
-    """ Sends a welcome email, specified by a template, to a new member
-    :param member: a list of info (name, pref name, email, date)
-    :return:
-    """
-    logging.debug('sendEmail')
-    logging.debug(str(member))
-    sentFrom = FROM_EMAIL
-
-    to = ['jonas.hedman@fripost.org']
-    logging.debug("to: "+str(to))
-    subject = 'Welcome to Femman!'
-
-    applicationDate = member[4]
-    logging.debug("applicationDate: "+str(applicationDate))
-
-    #this snippet calculates when a new member is welcome to kulturhuset
-    #at the sonest, i.e. applicationDate+1 day
-    datetime_object = applicationDate + timedelta(days=1)
-    welcomeDate = datetime_object.date()
-    logging.debug("welcomeDate: "+str(welcomeDate))
-
-    # this calcs how long membership is. if payed before or including
-    # oct 1 then member ship is applicationYear + nextyear.
-    applicationYear = applicationDate.year
-#    tmpStr = str(applicationYear)+"/10/1"
-#    firstOct = datetime.strptime(tmpStr, '%Y/%m/%d')
-
-    tmpStr = str(applicationYear)+"/12/1"
-    firstDec = datetime.strptime(tmpStr, '%Y/%m/%d')
-    welcomeYearString = str(applicationYear)
-    # depening on application year edit welcomeYearString
-    if applicationDate >= firstDec:
-        welcomeYearString += " AND "+str(applicationYear+1)
-
-    logging.debug("welcomeYear: "+str(welcomeYearString)) #for hello msg
-    prefName = member[2].decode('utf-8')
-
-    with open('templates/welcomeMailNextYear.txt', 'r') as myfile:
-        body = myfile.read()
-
-    body = body.replace("[preferredName]", prefName) #edit variables by replacing them
-    body = body.replace("[welcomeDate]", str(welcomeDate))
-    body = body.replace("[yearString]", welcomeYearString)
-    body = body.encode("utf-8")
-
-    frm = sentFrom
-    msg = MIMEMultipart('alternative')
-    msg.set_charset('utf8')
-    msg['FROM'] = sentFrom
-
-    to = member[3]
-#    to = 'jonas.hedman@fripost.org'
-
-    bodyStr = body
-    msg['Subject'] = subject
-    msg['To'] = to
-    _attach = MIMEText(bodyStr, 'plain', 'UTF-8')
-    msg.attach(_attach)
-
-    try:
-        logging.debug("trying to send email")
-        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-        server.ehlo()
-        server.login(FROM_EMAIL, FROM_PWD)
-        server.sendmail(frm, to, msg.as_string())
-        server.close()
-
-        print('    Email sent to '+member[2].decode('utf-8'))
-        print('    '+to)
-        logging.debug("Email sent to "+member[2].decode('utf-8'))
-    except Exception as e:
-        print(e)
-        logging.debug(e)
-
-
 
 def moosend(member):
     logging.debug("Add new member to moosend. moosend(member)")
