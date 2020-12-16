@@ -1,0 +1,21 @@
+
+This is an automated message, please do not reply to it.
+
+Hello [preferredName]! You are now a member of Fritt kulturhus i
+Uppsala, the organization that runs Kulturhuset Femman. You are welcome
+to events hosted at Femman starting [welcomeDate].
+
+Your membership is valid for the year of [yearString].
+
+Please visit our website for the latest updates on upcoming events and
+other news.
+
+https://khusuppsala.org
+
+If you have any questions you can get in touch with us at
+khusuppsala@gmail.com
+
+You can also follow us on our social media accounts.
+Facebook: https://www.facebook.com/kulturhusetfemman/
+Instagram: https://www.instagram.com/kulturhusetfemman/
+

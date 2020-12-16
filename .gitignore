@@ -1,0 +1,9 @@
+*.db
+*.swp
+femman.db
+*.pyc
+logs/
+output/
+reports/
+__pycache__
+
