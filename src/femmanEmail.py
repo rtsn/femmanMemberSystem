@@ -11,6 +11,7 @@ import email
 import logging
 import sys
 import os
+import configparser
 
 from datetime import datetime
 from datetime import timedelta
@@ -21,12 +22,21 @@ from email.header import Header
 
 import requests
 
+config = configparser.ConfigParser()
+config.read('auth')
+
 # Constants (remember to enable "unsecure" apps in gmail account
 ORG_EMAIL   = "@gmail.com"
-FROM_EMAIL  = "website.khusuppsala" + ORG_EMAIL
-FROM_PWD    = "V=hpL7Lx)_"
+FROM_EMAIL  = config['gmail']['user']+ ORG_EMAIL
+FROM_PWD    = config['gmail']['pw']
 SMTP_SERVER = "imap.gmail.com"
 SMTP_PORT   = 993
+
+#moosend
+APIKEY = config['moosend']['apiKey']
+THISYEAR = config['moosend']['thisYear']
+NEXTYEAR = config['moosend']['nextYear']
+
 
 def parseDate(dateLine):
     """ convert string
@@ -54,12 +64,6 @@ def extractInfo(body):
     :param body: msg.get_payload(decode=True)
     :return member: list
     """
-#    month = int(datetime.now().strftime("%m"))
-#    if month >= 10:
-#        cost = 50
-#    else:
-#        cost = 100
-
     cost = 100
 
     logging.debug("extractinfo(body)")
@@ -302,7 +306,7 @@ def sendEmail(member):
         print(e)
         logging.debug(e)
 
-def moosend(member):
+def moosend(member,year):
     logging.debug("Add new member to moosend. moosend(member)")
     name = member[1]
     email = member[2]
@@ -312,14 +316,18 @@ def moosend(member):
     }
 
     params = (
-        ('apikey', '64194184-21f9-4bf3-9663-4ea62e508cbd'),
+        ('apikey', APIKEY),
     )
 
     data = '{"Name":"'+name.decode('utf-8')+'","Email":"'+email+'","HasExternalDoubleOptIn":true}'
     logging.debug(data)
 
-    # add to members2020
-    response = requests.post('https://api.moosend.com/v3/subscribers/d3a3722e-39ba-4a79-adf4-e45b8c6d1cf8/subscribe.json', headers=headers, params=params, data=data.encode('utf-8'))
+    if year == "thisYear":
+        listId = THISYEAR
+    elif year == "nextYear":
+        listId = NEXTYEAR
+    url = 'https://api.moosend.com/v3/subscribers/'+listId+'/subscribe.json'
+    response = requests.post(url, headers=headers, params=params, data=data.encode('utf-8'))
 
 
     logging.debug(response.json())
@@ -333,33 +341,3 @@ def moosend(member):
         logging.debug("all good. member added to moosend")
     return code
 
-# add to members2021
-def moosendNextYear(member):
-    logging.debug("Add new member to moosend. moosend(member)")
-    name = member[1]
-    email = member[2]
-
-    headers = {
-        'Content-Type': 'application/json',
-    }
-
-    params = (
-        ('apikey', '64194184-21f9-4bf3-9663-4ea62e508cbd'),
-    )
-
-    data = '{"Name":"'+name.decode('utf-8')+'","Email":"'+email+'","HasExternalDoubleOptIn":true}'
-    logging.debug(data)
-
-    # add to members2020
-    response = requests.post('https://api.moosend.com/v3/subscribers/5c45c22e-b51b-47a8-96e5-9e24c2b079df/subscribe.json', headers=headers, params=params, data=data.encode('utf-8'))
-
-    logging.debug(response.json())
-    code = response.json()['Code']
-
-    if code != 0:
-        print("Error adding member to moosend")
-        print(response.json()['Error'])
-        logging.debug(response.json()['Error'])
-    else:
-        logging.debug("all good. member added to moosend")
-    return code

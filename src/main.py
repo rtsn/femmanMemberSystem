@@ -105,7 +105,7 @@ def main():
                                 print(" "*8 + member[1].decode('utf-8'))
                                 print(" "*8 +str(member[2])) # email need not be decoded
 
-                                moosendResult2 = femmanEmail.moosendNextYear(member)
+                                moosendResult2 = femmanEmail.moosend(member,"nextYear")
                                 if moosendResult2 != 0:
                                     print("See error above. Add manually. Important!")
                                 else:
@@ -151,7 +151,8 @@ def main():
                         print(" "*8 + member[1].decode('utf-8'))
                         print(" "*8 +str(member[2])) # email need not be decoded
 
-                        moosendResult2 = femmanEmail.moosendNextYear(member)
+                        print("    Adding member to next year's moosend...")
+                        moosendResult2 = femmanEmail.moosend(member,"nextYear")
                         if moosendResult2 != 0:
                             print("See error above. Add manually. Important!")
                         else:
@@ -162,8 +163,8 @@ def main():
                 print("    Sleep 2s")
 #                sleep(2)
                 print("        Adding member to moosend")
-                moosendResult = femmanEmail.moosend(member)
-                moosendResult2 = femmanEmail.moosendNextYear(member)
+                moosendResult = femmanEmail.moosend(member,"thisYear")
+                moosendResult2 = femmanEmail.moosend(member,"nextYear")
                 if moosendResult != 0 or moosendResult2 != 0:
                     print("See error above. Add manually. Important!")
                 else:
