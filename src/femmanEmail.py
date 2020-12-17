@@ -12,6 +12,7 @@ import logging
 import sys
 import os
 import configparser
+import femmanDb
 
 from datetime import datetime
 from datetime import timedelta
@@ -21,6 +22,7 @@ from email.mime.multipart import MIMEMultipart
 from email.header import Header
 
 import requests
+
 
 config = configparser.ConfigParser()
 config.read('auth')
@@ -138,8 +140,20 @@ def extractInfo(body):
         firstDate = members[0][3]
         if firstDate >= compareDate:
             print("\nWarning: totalCost > cost maybe check it out")
+            emailList = []
             for member in members:
                 print(member)
+                emailList.append(member[2])
+            emailCounter = len(set(emailList))
+            if emailCounter < len(members):
+                cand = members[0]
+                database = "femman.db"
+                conn = femmanDb.createConnection(database)
+                if not femmanDb.isMemberNextYear(conn, cand):
+                    print("trying to send warning")
+                    sendEmailWarning(cand)
+                else:
+                    print("is already member. should be sorted out")
     return members
 
 def readEmailFromGmail():
@@ -341,3 +355,49 @@ def moosend(member,year):
         logging.debug("all good. member added to moosend")
     return code
 
+def sendEmailWarning(member):
+    """ if a member has bought multiple memberships with identical email
+    adress; send a warning email (from template) and ask them to contact
+    us to sort things out.
+    :param member: a list of info (name, pref name, email, date)
+    :return:
+    """
+    logging.debug('sendEmail')
+    logging.debug(str(member))
+    sentFrom = FROM_EMAIL
+
+    subject = 'Warning, Please contact Femman IT!'
+
+    prefName = member[1].decode('utf-8')
+
+    with open('templates/warningEmail.txt', 'r') as myfile:
+        body = myfile.read()
+
+    body = body.replace("[preferredName]", prefName) #edit variables by replacing them
+    body = body.encode("utf-8")
+
+    frm = sentFrom
+    msg = MIMEMultipart('alternative')
+    msg.set_charset('utf8')
+    msg['FROM'] = sentFrom
+
+    to = member[2]
+
+    bodyStr = body
+    msg['Subject'] = subject
+    msg['To'] = to
+    _attach = MIMEText(bodyStr, 'plain', 'UTF-8')
+    msg.attach(_attach)
+
+    try:
+        logging.debug("trying to send email")
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        server.ehlo()
+        server.login(FROM_EMAIL, FROM_PWD)
+        server.sendmail(frm, to, msg.as_string())
+        server.close()
+
+        print('Warning sent to '+member[1].decode('utf-8')+' ('+to+')')
+    except Exception as e:
+        print(e)
+        logging.debug(e)

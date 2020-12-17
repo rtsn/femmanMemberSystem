@@ -1,0 +1,13 @@
+
+Hello [preferredName]! 
+This is an automated message from the IT-group at Kulturhuset Femman. 
+
+We noticed that you bought multiple memberships at the same time with
+identical email addresses. 
+
+In our system email addresses are unique identifiers. So two (or more) members
+cannot have the same email address. 
+
+Please contact us at khusuppsalait@gmail.com so we can sort this out. 
+
+Best regards
