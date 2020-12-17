@@ -1,2 +1,3 @@
+#h elper script. start from cron
 cd /home/nstr/kod/femman
 python3 src/main.py
