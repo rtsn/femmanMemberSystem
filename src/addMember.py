@@ -34,8 +34,11 @@ def main():
     email = email.strip()
     now = datetime.now()
     memberDate = now
+    memberDate = now.strftime("%Y-%m-%d %H:%M:00")
+    memberDate = datetime.strptime(memberDate, "%Y-%m-%d %H:%M:00")
 
     member = [name,name,email,memberDate]
+    print(member)
 
     database = "femman.db"
 

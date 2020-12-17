@@ -38,7 +38,7 @@ def rowsToHtmlAdmin(rows):
         name = member[1]
         if not isinstance(name, str):
             name = name.decode('utf-8')
- 
+
         pname = member[2]
         if not isinstance(pname, str):
             pname = pname.decode('utf-8')
