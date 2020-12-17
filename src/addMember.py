@@ -15,6 +15,7 @@ from random import randint
 import os
 import sys
 from importlib import reload #py3 conv
+
 reload(sys)
 
 
@@ -32,7 +33,7 @@ def main():
     email = email.lower()
     email = email.strip()
     now = datetime.now()
-    memberDate = now.strftime("%Y-%m-%d %H:%M:00")
+    memberDate = now
 
     member = [name,name,email,memberDate]
 
@@ -43,66 +44,78 @@ def main():
     conn = femmanDb.createConnection(database)
     conn.text_factory = str
 
+    now = datetime.now()
     sqlCreateMembersTable= """ CREATE TABLE IF NOT EXISTS members%s(
                                         id integer PRIMARY KEY,
                                         fullName text NOT NULL,
                                         prefName text NOT NULL,
                                         email    text NOT NULL,
                                         [MemberDate] timestamp NOT NULL
-                                    ); """ %
+                                    ); """ %str(now.year)
+    sqlCreateMembersTableNextYear= """ CREATE TABLE IF NOT EXISTS members%s(
+                                        id integer PRIMARY KEY,
+                                        fullName text NOT NULL,
+                                        prefName text NOT NULL,
+                                        email    text NOT NULL,
+                                        [MemberDate] timestamp NOT NULL
+                                    ); """ %str(now.year+1)
 
     with conn:
 
         # create members table table if it doesn't exist, i.e. first
         # time running program
 
-        logging.debug('{:%Y-%m-%d %H:%M:%S} Creating table'.format(datetime.now()))
-        femmanDb.createTable(conn, sqlCreateMembersTable)
-
-
         logging.debug('{:%Y-%m-%d %H:%M:%S}'.format(datetime.now())+str(member))
-        if femmanDb.isMember(conn, member) == True:
-            logging.debug('{:%Y-%m-%d %H:%M:%S} Already member'.format(datetime.now()))
-            outputString = str(member)+ " already a member"
-            print(outputString)
-            sys.exit()
+
+        okCheck = False
+
+        now = datetime.now()
+        if now.month >= 11:
+            femmanDb.createTable(conn,sqlCreateMembersTableNextYear)
+            if not femmanDb.isMemberNextYear(conn, member):
+                print("    Adding member to next year's db...")
+                memberNumber = femmanDb.insertMemberNextYear(conn, tuple(member))
+                print(" "*8 + "Nr: "+ str(memberNumber)+" ("+str(member[3])+")")
+                print(" "*8 + member[0].decode('utf-8'))
+                print(" "*8 + member[1].decode('utf-8'))
+                print(" "*8 +str(member[2])) # email need not be decoded
+                if memberNumber:
+                    okCheck = True
+
+                moosendResult2 = femmanEmail.moosend(member,"nextYear")
+                if moosendResult2 != 0:
+                    print("See error above. Add manually. Important!")
+                else:
+                    print("    ok!")
+            else:
+                print("Already member in next year's db")
 
 
-        print("Adding member to database...")
-        logging.debug('{:%Y-%m-%d %H:%M:%S} Adding member to db'.format(datetime.now()))
-        memberNumber = femmanDb.insertMember(conn, tuple(member))
-        strDate = str(member[3])
-        print(" "*8 + "Nr: "+ str(memberNumber)+" ("+strDate+")")
-        print(" "*8 +member[0].decode('utf-8'))
-        print(" "*8 +member[2])
-        logging.debug('{:%Y-%m-%d %H:%M:%S} added to db with nr'.format(datetime.now())+str(memberNumber))
+        femmanDb.createTable(conn, sqlCreateMembersTable)
+        if not femmanDb.isMember(conn, member): #if not member
+            print("    Adding member to database...")
+            logging.debug('{:%Y-%m-%d %H:%M:%S} Adding member to db'.format(datetime.now()))
+            memberNumber = femmanDb.insertMember(conn, tuple(member))
+            print(" "*8 + "Nr: "+ str(memberNumber)+" ("+str(member[3])+")")
+            print(" "*8 + member[0].decode('utf-8'))
+            print(" "*8 + member[1].decode('utf-8'))
+            print(" "*8 +str(member[2])) # email need not be decoded
+            logging.debug('{:%Y-%m-%d %H:%M:%S} added to db with nr'.format(datetime.now())+str(memberNumber))
 
-        print("    Adding member to moosend")
-        moosendResult = femmanEmail.moosend(member)
-        if moosendResult != 0:
-            print("See error above. Add manually. Important!")
+            if memberNumber:
+                okCheck = True
+
+            print("        Adding member to moosend")
+            moosendResult = femmanEmail.moosend(member,"thisYear")
+            if moosendResult != 0:
+                print("See error above. Add manually. Important!")
+            else:
+                print("    ok!")
         else:
-            print("    ok!")
+            print("already a in member current db")
 
-        print("    Emailing welcome msg...")
-        logging.debug('{:%Y-%m-%d %H:%M:%S} Email welcome msg'.format(datetime.now()))
-        member[3] = datetime.now()
-        femmanEmail.sendEmail([memberNumber]+member)
-
-
-#   logging.debug('{:%Y-%m-%d %H:%M:%S} Create outputs'.format(datetime.now()))
-
-#   database = "femman.db"
-#   logging.debug('{:%Y-%m-%d %H:%M:%S} Create connection to db'.format(datetime.now()))
-#   conn = femmanDb.createConnection(database)
-
-#   logging.debug('{:%Y-%m-%d %H:%M:%S} Fetch all members from db'.format(datetime.now()))
-#   members = femmanDb.getAllMembers(conn)
-
-#   logging.debug('{:%Y-%m-%d %H:%M:%S} Create html table output for arr'.format(datetime.now()))
-#   rowsToHtml(members)
-#   logging.debug('{:%Y-%m-%d %H:%M:%S} Create html table output for admin'.format(datetime.now()))
-#   rowsToHtmlAdmin(members)
+        if okCheck:
+            femmanEmail.sendEmail([memberNumber]+member)
 
 if __name__ == '__main__':
     main()
