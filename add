@@ -1,2 +1,1 @@
-#cd /home/nstr/kod/femman
 python3 src/addMember.py
