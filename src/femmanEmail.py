@@ -156,16 +156,23 @@ def extractInfo(body):
                     print("is already member. should be sorted out")
     return members
 
-def readAllEmailFromGmail():
-    """ this method goes through _every_ email in the above specified
+def readEmailFromGmail(howMany):
+    """ this method goes through all emails in inbox or just unread
+        (determined by parameter howMany) in the above specified
         gmail inbox. if a mail passes some checks then we try to extract
         membership attributes from the email body and add it to a list
         of potential member candidates which then is returned.
 
-    :param member: a list of info (name, pref name, email, date
+    :param member: howMany = "ALL" or "UNSEEN"
     :return newMemberList:
     """
     logging.debug("readEmailFromGmail")
+
+    which = ""
+    if howMany == "all":
+        which = "ALL"
+    elif howMany == "unread":
+        which = "UNSEEN"
     newMemberList = []
 
     logging.debug("trying to connect to gmail")
@@ -175,114 +182,20 @@ def readAllEmailFromGmail():
         mail.login(FROM_EMAIL,FROM_PWD)
         mail.select('inbox')
 
-        type, data = mail.search(None, 'ALL')
+        type, data = mail.search(None, which)
         mail_ids = data[0]
 
         logging.debug("connection seems ok")
         id_list = mail_ids.split() #determine range for for loop
+        print(str(len(id_list))+" emails to check")
         first_email_id = int(id_list[0])
         latest_email_id = int(id_list[-1])
         logging.debug("first_email_id " +str(first_email_id))
         logging.debug("latest_email_id " +str(latest_email_id))
 
-        #go through every email in inbox
         counter = 0
 
-        for i in range(latest_email_id,first_email_id, -1):
-            type, data = mail.fetch(str(i), '(RFC822)' )
-#            result, data = mail.fetch(str(message_id), "(RFC822)")
-#py3 https://stackoverflow.com/questions/14080629/python-3-imaplib-fetch-typeerror-cant-concat-bytes-to-int
-            for response_part in data:
-                if isinstance(response_part, tuple):
-                    msg = email.message_from_bytes(response_part[1])
-                    email_from = msg['from']
-                    # First check, if "from" not correct, skip email
-                    logging.debug("first check from == Squarespace <no-reply@squarespace.com>")
-                    if "Squarespace <no-reply@squarespace.com>" not in email_from:
-                        logging.debug("first check failed "+ str(email_from))
-                        continue
-                    logging.debug("first check ok")
-                    logging.debug("second check subject == Kulturhuset Femman: A New Order has Arrived")
-                    email_subject = msg['subject']
-                    email_subject = email_subject.replace("\r", "\n")
-                    email_subject = email_subject.replace("\n", "")
-                    checkString = "Kulturhuset Femman: A New Order has Arrived"
-
-                    if checkString not in email_subject:
-                        logging.debug("second check failed "+ str(email_subject))
-                        continue
-                    else:
-                        logging.debug("second check ok")
-                        body = msg.get_payload(decode=True)
-                        body = msg.get_payload()
-                        if msg.is_multipart():
-                            for part in msg.get_payload():
-                                body = part.get_payload()[0]
-                                body = body.get_payload(decode=True)
-                        if body == None:
-                            logging.debug("body = None")
-                            continue
-                        logging.debug("extract member info from email body")
-                        members = extractInfo(body)
-                        if members != []: #if if nothing went wrong in extraction
-                            logging.debug(str(members))
-                            logging.debug("append member(s) to member candidate list")
-                            newMemberList += members
-                            counter = len(newMemberList)
-
-                            #check if run from cron
-                            if os.isatty(sys.stdin.fileno()):
-                                sys.stdout.write("\r" + str(counter) + " member candidates found")
-                                sys.stdout.flush()
-                            else:
-                                pass
-                        else:
-                            print("    Product == Membership check failed!")
-                            logging.debug("something failed! members = []")
-        logging.debug("return newMemberList")
-        print()
-
-        if not os.isatty(sys.stdin.fileno()):
-            print(str(len(newMemberList))+ "  member candidates found")
-
-        return newMemberList
-    except Exception as e: #print std error
-        logging.debug(e)
-        print(str(e))
-
-def readUnreadEmailFromGmail():
-    """ this method goes through _every_ email in the above specified
-        gmail inbox. if a mail passes some checks then we try to extract
-        membership attributes from the email body and add it to a list
-        of potential member candidates which then is returned.
-
-    :param member: a list of info (name, pref name, email, date
-    :return newMemberList:
-    """
-    logging.debug("readEmailFromGmail")
-    newMemberList = []
-
-    logging.debug("trying to connect to gmail")
-    try:
-        #connect to gmail and select inbox
-        mail = imaplib.IMAP4_SSL(SMTP_SERVER)
-        mail.login(FROM_EMAIL,FROM_PWD)
-        mail.select('inbox')
-
-        type, data = mail.search(None, 'ALL')
-        mail_ids = data[0]
-
-        logging.debug("connection seems ok")
-        id_list = mail_ids.split() #determine range for for loop
-        first_email_id = int(id_list[0])
-        latest_email_id = int(id_list[-1])
-        logging.debug("first_email_id " +str(first_email_id))
-        logging.debug("latest_email_id " +str(latest_email_id))
-
-        #go through every email in inbox
-        counter = 0
-
-        for i in range(latest_email_id,first_email_id, -1):
+        for i in range(first_email_id,latest_email_id+1):
             type, data = mail.fetch(str(i), '(RFC822)' )
 #            result, data = mail.fetch(str(message_id), "(RFC822)")
 #py3 https://stackoverflow.com/questions/14080629/python-3-imaplib-fetch-typeerror-cant-concat-bytes-to-int
