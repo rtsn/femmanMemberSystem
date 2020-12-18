@@ -190,7 +190,10 @@ def readEmailFromGmail(howMany):
 
         logging.debug("connection seems ok")
         id_list = mail_ids.split() #determine range for for loop
-        print(str(len(id_list))+" emails to check")
+        numberOfEmails = len(id_list)
+        print(str(numberOfEmails)+" emails to check")
+        if numberOfEmails == 0:
+            return None
         first_email_id = int(id_list[0])
         latest_email_id = int(id_list[-1])
         logging.debug("first_email_id " +str(first_email_id))
