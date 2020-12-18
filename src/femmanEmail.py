@@ -142,7 +142,10 @@ def extractInfo(body):
             print("\nWarning: totalCost > cost maybe check it out")
             emailList = []
             for member in members:
-                print(member)
+                s = member[0].decode('utf-8')+", "+member[1].decode('utf-8')
+                s +=", "+member[2] +", "+ str(member[3])
+                s = " "*4 +s
+                print(s)
                 emailList.append(member[2])
             emailCounter = len(set(emailList))
             if emailCounter < len(members):
@@ -195,7 +198,17 @@ def readEmailFromGmail(howMany):
 
         counter = 0
 
-        for i in range(first_email_id,latest_email_id+1):
+        if howMany == "all":
+            which = "ALL"
+            lowerBound = latest_email_id
+            upperBound = first_email_id
+            increment = -1
+        elif howMany == "unread":
+            lowerBound = first_email_id
+            upperBound = latest_email_id+1
+            increment = 1
+
+        for i in range(lowerBound,upperBound,increment):
             type, data = mail.fetch(str(i), '(RFC822)' )
 #            result, data = mail.fetch(str(message_id), "(RFC822)")
 #py3 https://stackoverflow.com/questions/14080629/python-3-imaplib-fetch-typeerror-cant-concat-bytes-to-int

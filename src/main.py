@@ -24,9 +24,17 @@ def main():
     logging.basicConfig(filename=logFIleName,level=logging.DEBUG)
     logging.debug('')
     logging.debug('{:%Y-%m-%d %H:%M:%S} Starting Script'.format(datetime.now()))
+
+    if len(sys.argv) < 2 or str(sys.argv[1]) not in ["all","unread"]:
+        print("must be executed as either")
+        print("'./femman all' or './femman unread'")
+        sys.exit()
+
+    howMany = str(sys.argv[1]) # check all emails in inbox or just unread
+
     print("Checking email...")
     logging.debug('{:%Y-%m-%d %H:%M:%S} Checking Email'.format(datetime.now()))
-    newMembers = femmanEmail.readEmailFromGmail()
+    newMembers = femmanEmail.readEmailFromGmail(howMany)
 
     if newMembers:
         logging.debug('{:%Y-%m-%d %H:%M:%S} Member candidates found'.format(datetime.now()))
@@ -199,15 +207,21 @@ def main():
                 print(addStr)
                 logging.debug('{:%Y-%m-%d %H:%M:%S} '.format(datetime.now())+addStr)
     else:
-        elseMsg = "No member candidates found. Probably indicates some error."
-        logging.debug('{:%Y-%m-%d %H:%M:%S} '.format(datetime.now())+elseMsg)
-        print(elseMsg)
+        if howMany == "all":
+            elseMsg = "No member candidates found. Probably indicates some error."
+            logging.debug('{:%Y-%m-%d %H:%M:%S} '.format(datetime.now())+elseMsg)
+            print(elseMsg)
+        else:
+            print("no new candidates to process")
 
     logging.debug('{:%Y-%m-%d %H:%M:%S} Create HTML outputs'.format(datetime.now()))
     database = "femman.db"
     conn = femmanDb.createConnection(database)
+    print()
     members = femmanDb.getAllMembers(conn)
+    print("creating (arr) list")
     femmanMisc.rowsToHtml(members)
+    print("creating (admin) list")
     femmanMisc.rowsToHtmlAdmin(members)
 
 if __name__ == '__main__':
