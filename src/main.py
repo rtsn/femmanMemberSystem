@@ -89,7 +89,6 @@ def main():
 #                    outputString = str(member)+ " already a member"
 #                    print(outputString)
 
-
                     now = datetime.now()
                     if now.month >= 11:
 

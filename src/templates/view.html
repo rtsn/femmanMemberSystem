@@ -1,0 +1,33 @@
+    <!DOCTYPE html>  
+    <html>  
+    <head>  
+        <title>Members</title>  
+    </head>  
+    <body>  
+      
+    <h3>Members</h3>  
+    <table border=5>  
+        <thead>  
+            <td>ID</td>  
+            <td>Name</td>  
+            <td>Email</td>  
+            <td>Join date</td>  
+        </thead>  
+          
+        {% for row in rows %}  
+          
+            <tr>  
+                <td>{{row["id"]}}</td>  
+                <td>{{row["prefName"]}}</td>  
+                <td>{{row["email"]}}</td>  
+                <td>{{row["MemberDate"]}}</td>  
+            </tr>  
+          
+        {% endfor %}  
+    </table>  
+    <br><br>  
+      
+    <a href="/">Go back to home page</a>  
+      
+    </body>  
+    </html>  
