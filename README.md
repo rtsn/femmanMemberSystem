@@ -16,8 +16,7 @@
 
 
 # exec
-    ./src/main.py all
-or 
+    ./src/main.py all #or
     ./src/main.py unread
 
 
